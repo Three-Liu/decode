@@ -1,0 +1,4 @@
+/* DeCode Extension — panel.css
+ * 主要样式通过 Shadow DOM adoptedStyleSheets 注入（见 content.js / panel.js）
+ * 此文件可用于未来需要在 Shadow DOM 外部控制的样式
+ */

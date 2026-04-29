@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="20" fill="white"/>
+  <rect width="128" height="128" rx="20" fill="none" stroke="#e8e8e8" stroke-width="2"/>
+  <text
+    x="64"
+    y="90"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="76"
+    font-weight="900"
+    font-style="italic"
+    fill="#cc1111"
+    letter-spacing="-2"
+  >de</text>
+</svg>
