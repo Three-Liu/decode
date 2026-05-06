@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DeCode",
   "version": "0.1.0",
-  "description": "Decode or encode selected text instantly. Base64, URL, HTML, Hex, JWT, Unicode, gzip, zstd. Chain multiple decode steps.",
+  "description": "A developer tool that decodes or encodes any text you select on a webpage. Supports common formats like Base64, URL encoding, JWT, and Hex.",
   "permissions": [],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
