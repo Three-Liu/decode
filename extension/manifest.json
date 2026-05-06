@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DeCode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A developer tool that decodes or encodes any text you select on a webpage. Supports common formats like Base64, URL encoding, JWT, and Hex.",
   "permissions": [],
   "host_permissions": ["<all_urls>"],

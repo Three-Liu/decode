@@ -403,6 +403,29 @@ function buildPanelContent(shadow) {
   header.appendChild(headerRight);
   panel.appendChild(header);
 
+  // 拖拽支持：每次重渲染后重新绑定，避免 buildPanelContent 销毁旧节点后监听器丢失
+  var dragHost = shadow.host;
+  header.style.cursor = 'move';
+  header.addEventListener('mousedown', function (e) {
+    if (e.target && e.target.classList &&
+        (e.target.classList.contains('close-btn') || e.target.classList.contains('mode-btn'))) return;
+    e.preventDefault();
+    var startX = e.clientX;
+    var startY = e.clientY;
+    var origLeft = parseInt(dragHost.style.left, 10) || 0;
+    var origTop  = parseInt(dragHost.style.top,  10) || 0;
+    function onMove(ev) {
+      dragHost.style.left = (origLeft + ev.clientX - startX) + 'px';
+      dragHost.style.top  = (origTop  + ev.clientY - startY) + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
   // ---- Toolbar: 双栏按钮 ----
   if (state.mode === 'encode') {
     // ---- 编码模式 ----
@@ -678,34 +701,6 @@ function openPanel(text, rect) {
     host.style.top        = top  + 'px';
     host.style.left       = left + 'px';
     host.style.visibility = 'visible';
-
-    // 拖拽支持：拖 header 区域移动面板
-    var headerEl = host.shadowRoot && host.shadowRoot.querySelector('.header');
-    if (headerEl) {
-      headerEl.style.cursor = 'move';
-      headerEl.addEventListener('mousedown', function (e) {
-        // 排除关闭按钮和模式切换按钮
-        if (e.target && e.target.classList && (e.target.classList.contains('close-btn') || e.target.classList.contains('mode-btn'))) return;
-        e.preventDefault();
-        var startX = e.clientX;
-        var startY = e.clientY;
-        var origLeft = parseInt(host.style.left, 10) || 0;
-        var origTop  = parseInt(host.style.top,  10) || 0;
-
-        function onMove(ev) {
-          var dx = ev.clientX - startX;
-          var dy = ev.clientY - startY;
-          host.style.left = (origLeft + dx) + 'px';
-          host.style.top  = (origTop  + dy) + 'px';
-        }
-        function onUp() {
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-        }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
-      });
-    }
   });
 }
 
