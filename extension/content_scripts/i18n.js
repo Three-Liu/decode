@@ -2,10 +2,12 @@
 
 'use strict';
 
-// Detect language once at load time.
-// Matches 'zh', 'zh-CN', 'zh-TW', etc. → Chinese; everything else → English.
+// Load a persisted choice first, then fall back to browser language.
+// Matches 'zh', 'zh-CN', 'zh-TW', etc. -> Chinese; everything else -> English.
 var _lang = (function () {
   try {
+    var saved = localStorage.getItem('decodec-language');
+    if (saved === 'zh' || saved === 'en') return saved;
     var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
     return lang.startsWith('zh') ? 'zh' : 'en';
   } catch (e) {
@@ -28,6 +30,16 @@ var _strings = {
     encodePrompt:   '在此输入要编码的文字…',
     encodeOutput:   '编码结果将显示于此',
     badgeTitle:     'DeCode: 解码选中文本',
+    recommendation: '推荐：{format}',
+    binaryHint:     '输出为二进制数据，可下载。',
+    activeSource:   '↳ 下一步基于此',
+    close:           '关闭',
+    history:         '历史',
+    noHistory:       '暂无历史记录',
+    clearHistory:    '清空历史',
+    language:        '切换语言',
+    pin:             '固定格式',
+    unpin:           '取消固定格式',
   },
   en: {
     title:          'DeCode',
@@ -43,6 +55,16 @@ var _strings = {
     encodePrompt:   'Type text to encode…',
     encodeOutput:   'Encoded output will appear here',
     badgeTitle:     'DeCode: decode selected text',
+    recommendation: 'Recommended: {format}',
+    binaryHint:     'Binary output is ready to download.',
+    activeSource:   '↳ next step uses this',
+    close:           'Close',
+    history:         'History',
+    noHistory:       'No recent decodes',
+    clearHistory:    'Clear history',
+    language:        'Switch language',
+    pin:             'Pin format',
+    unpin:           'Unpin format',
   },
 };
 
@@ -50,6 +72,17 @@ function t(key) {
   return (_strings[_lang] || _strings.en)[key] || key;
 }
 
+function setLanguage(language) {
+  if (language !== 'zh' && language !== 'en') return _lang;
+  _lang = language;
+  try { localStorage.setItem('decodec-language', language); } catch (e) { /* storage unavailable */ }
+  return _lang;
+}
+
+function getLanguage() {
+  return _lang;
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { t, _lang };
+  module.exports = { t, setLanguage, getLanguage, get _lang() { return _lang; } };
 }

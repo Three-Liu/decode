@@ -186,7 +186,7 @@ test('mousedown 在徽章外部时移除徽章', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 8. 第二次选区变化 → 旧徽章被移除，新徽章注入
+// 8. 第二次选区变化 → 复用徽章宿主并更新位置
 // ---------------------------------------------------------------------------
 
 test('第二次选区变化替换旧徽章', () => {
@@ -204,8 +204,18 @@ test('第二次选区变化替换旧徽章', () => {
   expect(secondHost).not.toBeNull();
   expect(secondHost.style.top).toBe('200px');
 
-  // 旧徽章不再在 DOM 中
-  expect(firstHost.isConnected).toBe(false);
+  // 拖拽选择期间复用同一个宿主，避免 Shadow DOM 闪烁
+  expect(firstHost.isConnected).toBe(true);
+  expect(secondHost).toBe(firstHost);
+});
+
+test('徽章在视口底部时翻转到选区上方', () => {
+  const originalHeight = window.innerHeight;
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: 200 });
+  injectBadge('near bottom', makeRect({ top: 180, bottom: 195, left: 20 }));
+  const host = document.getElementById('decodec-badge-host');
+  expect(host.style.top).toBe('156px');
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: originalHeight });
 });
 
 // ---------------------------------------------------------------------------

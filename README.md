@@ -19,6 +19,12 @@ Select any encoded text → click the **de** badge → a floating panel appears 
 - **Decode**: Base64 · Base32 · URL · Unicode escapes · UTF-16 · JWT · Cookie · HTML entities · Hex
 - **Encode**: Base64 · URL · Hex · Unicode · Base32
 - Chained decoding — apply multiple steps in sequence
+- Automatic high-confidence format detection for JWT, Base64, URL, Unicode, and compressed data
+- Binary results disable further decode actions and can be downloaded directly
+- Context-menu action and `Ctrl+Shift+D` / `Command+Shift+D` shortcut for opening the panel
+- Panel supports Escape to close, dark mode, responsive sizing, and active chain-source indication
+- Recent decode history (up to 20 entries), with clear action and pinned decoder formats
+- Manual English/Chinese language toggle, persisted across panel sessions
 - Smart panel positioning — appears above or below selection based on available space
 - Draggable panel
 - Bilingual UI — English and Chinese (follows browser language)
@@ -32,10 +38,15 @@ npm install
 node build.js
 ```
 
-Then load `extension/` as an **unpacked extension** in Chrome:
+Then load **only the `extension/` directory** as an **unpacked extension** in Chrome
+(the exact path is `/Users/liusirui/projects/chrome-plugins/decodec/extension`):
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
 3. Click **Load unpacked** → select the `extension/` folder
+
+Do not select the repository root (`decodec/`), which contains `__tests__/` and
+other development files, and do not select `decodec.zip` directly. If using the
+archive, unzip it first and select its nested `extension/` folder.
 
 ### Development
 
@@ -91,6 +102,8 @@ DeCode 是一个 Chrome 浏览器插件，让你在网页上选中任意编码�
 - 智能定位——根据页面剩余空间自动决定面板显示在选区上方或下方
 - 面板可拖拽移动
 - 双语界面——跟随浏览器语言自动切换中英文
+- 可查看最近 20 条解码记录并固定常用格式
+- 可手动切换中英文，语言选择会持久化
 
 ### 安装（开发模式）
 
@@ -101,10 +114,14 @@ npm install
 node build.js
 ```
 
-然后在 Chrome 中以「开发者模式」加载扩展：
+然后在 Chrome 中以「开发者模式」只加载项目中的 `extension/` 文件夹
+（完整路径为 `/Users/liusirui/projects/chrome-plugins/decodec/extension`）：
 1. 打开 `chrome://extensions`
 2. 开启右上角的**开发者模式**
 3. 点击**加载已解压的扩展程序** → 选择项目中的 `extension/` 文件夹
+
+不要选择仓库根目录 `decodec/`，因为其中包含 `__tests__/` 等开发文件；也不要
+直接选择 `decodec.zip`。如果使用压缩包，请先解压，再选择里面的 `extension/` 文件夹。
 
 ### 开发
 

@@ -9,7 +9,7 @@ module.exports = {
     {
       displayName: 'content',
       testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/__tests__/content.test.js'],
+      testMatch: ['<rootDir>/__tests__/(content|panel).test.js'],
     },
   ],
 };

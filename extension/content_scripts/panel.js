@@ -6,6 +6,8 @@ var _i18n = (function () {
   try { return require('./i18n'); } catch (e) { return { t: function (k) { return k; } }; }
 })();
 var t = _i18n.t;
+var setLanguage = _i18n.setLanguage || function () {};
+var getLanguage = _i18n.getLanguage || function () { return 'en'; };
 
 var PANEL_ID = 'decodec-panel-host';
 
@@ -19,7 +21,9 @@ var PANEL_CSS = [
   '  background: #fff;',
   '  border: 1px solid rgba(0,0,0,0.12);',
   '  border-radius: 10px;',
-  '  width: 400px;',
+  '  width: min(400px, calc(100vw - 16px));',
+  '  max-width: calc(100vw - 16px);',
+  '  box-sizing: border-box;',
   '  max-height: 560px;',
   '  overflow-y: auto;',
   '  box-shadow: 0 4px 20px rgba(0,0,0,0.15);',
@@ -46,7 +50,7 @@ var PANEL_CSS = [
   '  cursor: pointer;',
   '  background: none;',
   '  border: none;',
-  '  color: #999;',
+  '  color: #5f6368;',
   '  font-size: 16px;',
   '  line-height: 1;',
   '  padding: 0 2px;',
@@ -69,7 +73,7 @@ var PANEL_CSS = [
   '  font-weight: 700;',
   '  text-transform: uppercase;',
   '  letter-spacing: 0.06em;',
-  '  color: #aaa;',
+  '  color: #5f6368;',
   '  margin-bottom: 6px;',
   '}',
   '.btn-wrap {',
@@ -90,6 +94,27 @@ var PANEL_CSS = [
   '.decoder-btn:hover { background: #e8f0fe; border-color: #1a73e8; color: #1a73e8; }',
   '.decoder-btn.decompress:hover { background: #fce8f1; border-color: #c2185b; color: #c2185b; }',
   '.decoder-btn[disabled] { opacity: 0.35; cursor: default; }',
+  '.decoder-btn.loading { opacity: 0.7; cursor: wait; }',
+  '.icon-btn { background: none; border: 1px solid #d1d5db; border-radius: 4px; color: #5f6368; cursor: pointer; font-size: 11px; line-height: 1; padding: 3px 5px; }',
+  '.icon-btn:hover { background: #f1f3f4; color: #1a73e8; border-color: #1a73e8; }',
+  '.decoder-control { display: inline-flex; align-items: center; gap: 2px; }',
+  '.pin-btn { background: none; border: none; color: #9aa0a6; cursor: pointer; font-size: 12px; line-height: 1; padding: 2px; }',
+  '.pin-btn:hover, .pin-btn.pinned { color: #f9ab00; }',
+  '.history-area { padding: 8px 12px; }',
+  '.history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; color: #5f6368; font-size: 10px; font-weight: 700; text-transform: uppercase; }',
+  '.history-clear { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 10px; padding: 2px; }',
+  '.history-clear:hover { color: #d93025; }',
+  '.history-item { border-top: 1px solid #f0f0f0; padding: 7px 0; }',
+  '.history-item-label { color: #5f6368; font-size: 10px; font-weight: 600; }',
+  '.history-item-input, .history-item-output { color: #3c4043; font-family: "SF Mono","Fira Code","Consolas",monospace; font-size: 10px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+  '.history-item-output { color: #5f6368; }',
+  '.recommendation {',
+  '  padding: 7px 12px;',
+  '  border-bottom: 1px solid #ebebeb;',
+  '  background: #f8fbff;',
+  '  color: #1a73e8;',
+  '  font-size: 11px;',
+  '}',
   // 结果步骤
   '.step {',
   '  padding: 8px 12px;',
@@ -104,20 +129,20 @@ var PANEL_CSS = [
   '  font-weight: 600;',
   '  text-transform: uppercase;',
   '  letter-spacing: 0.05em;',
-  '  color: #888;',
+  '  color: #5f6368;',
   '  margin-bottom: 4px;',
   '}',
   '.step-dismiss {',
   '  background: none;',
   '  border: none;',
   '  cursor: pointer;',
-  '  color: #ccc;',
+  '  color: #6b7280;',
   '  font-size: 13px;',
   '  line-height: 1;',
   '  padding: 0 0 0 4px;',
   '  flex-shrink: 0;',
   '}',
-  '.step-dismiss:hover { color: #999; }',
+  '.step-dismiss:hover { color: #3c4043; }',
   '.step-text {',
   '  font-family: "SF Mono","Fira Code","Consolas",monospace;',
   '  font-size: 11px;',
@@ -164,16 +189,17 @@ var PANEL_CSS = [
   '.empty-hint {',
   '  padding: 10px 12px;',
   '  font-size: 11px;',
-  '  color: #bbb;',
+  '  color: #6b7280;',
   '  font-style: italic;',
   '}',
+  '.close-btn:focus-visible, .decoder-btn:focus-visible, .mode-btn:focus-visible, .step-dismiss:focus-visible { outline: 2px solid #1a73e8; outline-offset: 2px; }',
   // 编码模式
   '.mode-btn {',
   '  cursor: pointer;',
   '  background: none;',
   '  border: 1px solid #ddd;',
   '  border-radius: 4px;',
-  '  color: #999;',
+  '  color: #5f6368;',
   '  font-size: 11px;',
   '  line-height: 1;',
   '  padding: 2px 5px;',
@@ -233,7 +259,22 @@ var PANEL_CSS = [
   '  color: #1a1a1a;',
   '  min-height: 28px;',
   '}',
-  '.encode-output.empty { color: #bbb; font-style: italic; }',
+  '.encode-output.empty { color: #6b7280; font-style: italic; }',
+  '.step.active-source { border-left: 3px solid #1a73e8; padding-left: 9px; }',
+  '.step-source { color: #1a73e8; font-size: 9px; font-weight: 500; text-transform: none; letter-spacing: 0; margin-left: 6px; }',
+  '@media (prefers-color-scheme: dark) {',
+  '  .panel { background: #202124; color: #e8eaed; border-color: #3c4043; box-shadow: 0 4px 20px rgba(0,0,0,0.45); }',
+  '  .header, .toolbar, .step { border-color: #3c4043; }',
+  '  .close-btn { color: #9aa0a6; } .close-btn:hover { color: #e8eaed; }',
+  '  .decoder-btn, .fmt-btn, .copy-btn, .mode-btn, .icon-btn { background: #292a2d; border-color: #5f6368; color: #e8eaed; }',
+  '  .decoder-btn:hover, .fmt-btn:hover, .copy-btn:hover, .mode-btn:hover { background: #3c4043; }',
+  '  .step-text, .encode-output { background: #303134; color: #e8eaed; }',
+  '  .encode-textarea { background: #292a2d; border-color: #5f6368; color: #e8eaed; }',
+  '  .encode-textarea:focus { background: #303134; }',
+  '  .col-title, .empty-hint { color: #9aa0a6; }',
+  '  .recommendation { background: #1e3a5f; color: #8ab4f8; border-color: #3c4043; }',
+  '  .history-header, .history-item-label, .history-item-output { color: #bdc1c6; } .history-item { border-color: #3c4043; } .history-item-input { color: #e8eaed; }',
+  '}',
 ].join('\n');
 
 // ---------------------------------------------------------------------------
@@ -242,6 +283,57 @@ var PANEL_CSS = [
 
 function isBinary(output) {
   return output && output.bytes instanceof Uint8Array && !output.text;
+}
+
+function base64Bytes(input) {
+  try {
+    var normalized = String(input).trim().replace(/-/g, '+').replace(/_/g, '/');
+    if (!normalized || /[^A-Za-z0-9+/=]/.test(normalized)) return null;
+    while (normalized.length % 4) normalized += '=';
+    if (typeof Buffer !== 'undefined') return new Uint8Array(Buffer.from(normalized, 'base64'));
+    var binary = atob(normalized);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Return the most specific, high-confidence decoder recommendation. Plain text
+// deliberately returns null so opening the panel never creates a surprising
+// failed step.
+function recommendDecoder(input, decoders) {
+  var text = String(input || '').trim();
+  if (!text) return null;
+
+  var byId = {};
+  (decoders || []).forEach(function (decoder) { byId[decoder.id] = decoder; });
+
+  // JWTs are structurally distinctive and must win over Base64.
+  if (/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(text)) {
+    if (byId.jwt) return byId.jwt;
+  }
+
+  // Compression decoders consume Base64 text. Also accept a directly selected
+  // binary string when the browser exposes its byte values unchanged.
+  var rawMagic = [];
+  for (var ri = 0; ri < Math.min(text.length, 4); ri++) rawMagic.push(text.charCodeAt(ri) & 0xff);
+  var bytes = base64Bytes(text);
+  var magic = bytes && bytes.length >= 4 ? bytes : rawMagic;
+  if (magic.length >= 2 && magic[0] === 0x1f && magic[1] === 0x8b && byId.gzip) return byId.gzip;
+  if (magic.length >= 4 && magic[0] === 0x28 && magic[1] === 0xb5 && magic[2] === 0x2f && magic[3] === 0xfd && byId.zstd) return byId.zstd;
+  if (magic.length >= 2 && magic[0] === 0x78 && (magic[1] === 0x01 || magic[1] === 0x5e || magic[1] === 0x9c || magic[1] === 0xda) && byId.deflate) return byId.deflate;
+
+  if (/\\(?:u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})/.test(text) && byId.unicode) return byId.unicode;
+  if (/(?:%[0-9a-fA-F]{2}){1,}/.test(text) && byId.url) return byId.url;
+
+  // Require a useful length or explicit padding to avoid auto-decoding short
+  // ordinary words such as "abc".
+  if (text.length >= 4 || /=+$/.test(text)) {
+    if (/^[A-Za-z0-9+/=_-]+$/.test(text) && bytes && bytes.length > 0 && byId.base64) return byId.base64;
+  }
+  return null;
 }
 
 function getDecoderGroups() {
@@ -348,10 +440,85 @@ var ENCODERS = [
 // ---------------------------------------------------------------------------
 
 var _panelState = null;
+var _panelKeydownHandler = null;
+var _panelPreviousFocus = null;
+var HISTORY_KEY = 'decodec-history-v1';
+var PINS_KEY = 'decodec-pinned-formats-v1';
+
+function readStoredJson(key, fallback) {
+  try {
+    var parsed = JSON.parse(localStorage.getItem(key) || 'null');
+    return parsed == null ? fallback : parsed;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function writeStoredJson(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ }
+}
+
+function getHistory() {
+  var history = readStoredJson(HISTORY_KEY, []);
+  return Array.isArray(history) ? history : [];
+}
+
+function addHistory(decoder, input, output) {
+  if (!decoder || !output || !String(input || '').trim()) return;
+  var value;
+  if (output.error) value = 'Error: ' + output.error;
+  else if (isBinary(output)) value = '[' + output.bytes.length + ' bytes]';
+  else value = String(output.text == null ? '' : output.text);
+  var entry = {
+    decoderId: decoder.id,
+    label: decoder.label,
+    input: String(input).slice(0, 500),
+    output: value.slice(0, 1000),
+    createdAt: Date.now(),
+  };
+  var history = getHistory().filter(function (item) {
+    return !(item.decoderId === entry.decoderId && item.input === entry.input);
+  });
+  history.unshift(entry);
+  writeStoredJson(HISTORY_KEY, history.slice(0, 20));
+}
+
+function getPinnedFormats() {
+  var pins = readStoredJson(PINS_KEY, []);
+  return Array.isArray(pins) ? pins : [];
+}
+
+function togglePinnedFormat(id) {
+  var pins = getPinnedFormats();
+  var index = pins.indexOf(id);
+  if (index >= 0) pins.splice(index, 1);
+  else pins.unshift(id);
+  writeStoredJson(PINS_KEY, pins);
+}
+
+function orderedDecoders(decoders) {
+  var pins = getPinnedFormats();
+  return (decoders || []).slice().sort(function (a, b) {
+    var ai = pins.indexOf(a.id);
+    var bi = pins.indexOf(b.id);
+    if (ai < 0 && bi < 0) return 0;
+    if (ai < 0) return 1;
+    if (bi < 0) return -1;
+    return ai - bi;
+  });
+}
 
 function removePanel() {
+  if (_panelKeydownHandler) {
+    document.removeEventListener('keydown', _panelKeydownHandler, true);
+    _panelKeydownHandler = null;
+  }
   var host = document.getElementById(PANEL_ID);
   if (host) host.remove();
+  if (_panelPreviousFocus && _panelPreviousFocus.isConnected && typeof _panelPreviousFocus.focus === 'function') {
+    _panelPreviousFocus.focus();
+  }
+  _panelPreviousFocus = null;
   _panelState = null;
 }
 
@@ -376,6 +543,9 @@ function buildPanelContent(shadow) {
 
   var panel = document.createElement('div');
   panel.className = 'panel';
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', t('title'));
+  panel.setAttribute('aria-modal', 'false');
 
   // ---- Header ----
   var header = document.createElement('div');
@@ -385,6 +555,24 @@ function buildPanelContent(shadow) {
   title.textContent = t('title');
   var headerRight = document.createElement('div');
   headerRight.style.cssText = 'display:flex;align-items:center;gap:4px;';
+  var historyBtn = document.createElement('button');
+  historyBtn.className = 'icon-btn';
+  historyBtn.textContent = '\u21ba';
+  historyBtn.title = t('history');
+  historyBtn.setAttribute('aria-label', t('history'));
+  historyBtn.addEventListener('click', function () {
+    state.showHistory = !state.showHistory;
+    buildPanelContent(shadow);
+  });
+  var languageBtn = document.createElement('button');
+  languageBtn.className = 'icon-btn';
+  languageBtn.textContent = getLanguage() === 'zh' ? 'EN' : '中';
+  languageBtn.title = t('language');
+  languageBtn.setAttribute('aria-label', t('language'));
+  languageBtn.addEventListener('click', function () {
+    setLanguage(getLanguage() === 'zh' ? 'en' : 'zh');
+    buildPanelContent(shadow);
+  });
   var modeBtn = document.createElement('button');
   modeBtn.className = 'mode-btn' + (state.mode === 'encode' ? ' active' : '');
   modeBtn.textContent = state.mode === 'encode' ? t('switchToDecode') : t('switchToEncode');
@@ -396,7 +584,10 @@ function buildPanelContent(shadow) {
   var closeBtn = document.createElement('button');
   closeBtn.className = 'close-btn';
   closeBtn.textContent = '\u00d7';
+  closeBtn.setAttribute('aria-label', t('close'));
   closeBtn.addEventListener('click', removePanel);
+  headerRight.appendChild(historyBtn);
+  headerRight.appendChild(languageBtn);
   headerRight.appendChild(modeBtn);
   headerRight.appendChild(closeBtn);
   header.appendChild(title);
@@ -408,7 +599,9 @@ function buildPanelContent(shadow) {
   header.style.cursor = 'move';
   header.addEventListener('mousedown', function (e) {
     if (e.target && e.target.classList &&
-        (e.target.classList.contains('close-btn') || e.target.classList.contains('mode-btn'))) return;
+        (e.target.classList.contains('close-btn') || e.target.classList.contains('mode-btn')
+          || e.target.classList.contains('icon-btn') || e.target.classList.contains('pin-btn')
+          || e.target.classList.contains('history-clear'))) return;
     e.preventDefault();
     var startX = e.clientX;
     var startY = e.clientY;
@@ -425,6 +618,56 @@ function buildPanelContent(shadow) {
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   });
+
+  if (state.showHistory) {
+    var historyArea = document.createElement('div');
+    historyArea.className = 'history-area';
+    var historyHeader = document.createElement('div');
+    historyHeader.className = 'history-header';
+    var historyTitle = document.createElement('span');
+    historyTitle.textContent = t('history');
+    historyHeader.appendChild(historyTitle);
+    var clearHistoryBtn = document.createElement('button');
+    clearHistoryBtn.className = 'history-clear';
+    clearHistoryBtn.textContent = t('clearHistory');
+    clearHistoryBtn.addEventListener('click', function () {
+      writeStoredJson(HISTORY_KEY, []);
+      buildPanelContent(shadow);
+    });
+    historyHeader.appendChild(clearHistoryBtn);
+    historyArea.appendChild(historyHeader);
+
+    var history = getHistory();
+    if (history.length === 0) {
+      var noHistory = document.createElement('div');
+      noHistory.className = 'empty-hint';
+      noHistory.textContent = t('noHistory');
+      historyArea.appendChild(noHistory);
+    } else {
+      history.forEach(function (entry) {
+        var item = document.createElement('div');
+        item.className = 'history-item';
+        var label = document.createElement('div');
+        label.className = 'history-item-label';
+        label.textContent = entry.label || entry.decoderId || '';
+        item.appendChild(label);
+        var input = document.createElement('div');
+        input.className = 'history-item-input';
+        input.textContent = entry.input || '';
+        input.title = entry.input || '';
+        item.appendChild(input);
+        var output = document.createElement('div');
+        output.className = 'history-item-output';
+        output.textContent = entry.output || '';
+        output.title = entry.output || '';
+        item.appendChild(output);
+        historyArea.appendChild(item);
+      });
+    }
+    panel.appendChild(historyArea);
+    shadow.appendChild(panel);
+    return;
+  }
 
   // ---- Toolbar: 双栏按钮 ----
   if (state.mode === 'encode') {
@@ -509,14 +752,60 @@ function buildPanelContent(shadow) {
   // 找最后一个【成功】的输出作为下一步的输入来源
   // error 步骤只是提示，不影响后续按钮的可用性
   var lastSuccessOutput = null;
+  var lastSuccessIndex = -1;
   for (var si = state.steps.length - 1; si >= 0; si--) {
     if (!state.steps[si].output.error) {
       lastSuccessOutput = state.steps[si].output;
+      lastSuccessIndex = si;
       break;
     }
   }
+  var hasBinaryOutput = isBinary(lastSuccessOutput);
+  var isLoading = !!state.loadingDecoderId;
   var toolbar = document.createElement('div');
   toolbar.className = 'toolbar';
+
+  function runDecoder(d) {
+    if (isLoading || hasBinaryOutput) return;
+    var currentInput = lastSuccessOutput ? lastSuccessOutput.text : state.input;
+    if (typeof currentInput !== 'string') return;
+
+    state.loadingDecoderId = d.id;
+    buildPanelContent(shadow);
+
+    var result;
+    try {
+      result = d.decode(currentInput);
+    } catch (e) {
+      result = { text: '', error: e && e.message ? e.message : String(e) };
+    }
+    Promise.resolve(result).then(function (resolved) {
+      // The panel may have been closed while an async decoder was running.
+      if (!_panelState || _panelState !== state) return;
+      var finalOutput = resolved || { text: '', error: 'Decoder returned no output' };
+      state.steps.push({ decoderId: d.id, label: d.label, output: finalOutput });
+      addHistory(d, currentInput, finalOutput);
+    }).catch(function (e) {
+      if (!_panelState || _panelState !== state) return;
+      var failedOutput = { text: '', error: e && e.message ? e.message : String(e) };
+      state.steps.push({ decoderId: d.id, label: d.label, output: failedOutput });
+      addHistory(d, currentInput, failedOutput);
+    }).then(function () {
+      if (!_panelState || _panelState !== state) return;
+      state.loadingDecoderId = null;
+      buildPanelContent(shadow);
+    });
+  }
+
+  var recommendation = state.steps.length === 0 && !isLoading
+    ? recommendDecoder(state.input, groups.dc.concat(groups.dd))
+    : null;
+  if (recommendation) {
+    var recommendationDiv = document.createElement('div');
+    recommendationDiv.className = 'recommendation';
+    recommendationDiv.textContent = t('recommendation').replace('{format}', recommendation.label);
+    panel.appendChild(recommendationDiv);
+  }
 
   function makeCol(colTitle, decoders, cssClass) {
     var col = document.createElement('div');
@@ -528,30 +817,36 @@ function buildPanelContent(shadow) {
     var wrap = document.createElement('div');
     wrap.className = 'btn-wrap';
 
-    decoders.forEach(function (d) {
-      var enabled = d.accepts === 'string';
+    orderedDecoders(decoders).forEach(function (d) {
+      var enabled = d.accepts === 'string' && !hasBinaryOutput && !isLoading;
 
+      var control = document.createElement('span');
+      control.className = 'decoder-control';
       var btn = document.createElement('button');
-      btn.className = 'decoder-btn' + (cssClass ? ' ' + cssClass : '');
-      btn.textContent = d.label;
+      btn.className = 'decoder-btn' + (cssClass ? ' ' + cssClass : '')
+        + (state.loadingDecoderId === d.id ? ' loading' : '');
+      btn.textContent = state.loadingDecoderId === d.id ? d.label + '...' : d.label;
       if (!enabled) {
         btn.setAttribute('disabled', '');
       } else {
         btn.addEventListener('click', function () {
-          var currentInput = lastSuccessOutput ? lastSuccessOutput.text : state.input;
-          var output = d.decode(currentInput);
-          if (output && typeof output.then === 'function') {
-            output.then(function (resolved) {
-              state.steps.push({ decoderId: d.id, label: d.label, output: resolved });
-              buildPanelContent(shadow);
-            });
-          } else {
-            state.steps.push({ decoderId: d.id, label: d.label, output: output });
-            buildPanelContent(shadow);
-          }
+          runDecoder(d);
         });
       }
-      wrap.appendChild(btn);
+      control.appendChild(btn);
+      var pinBtn = document.createElement('button');
+      var pinned = getPinnedFormats().indexOf(d.id) >= 0;
+      pinBtn.className = 'pin-btn' + (pinned ? ' pinned' : '');
+      pinBtn.textContent = pinned ? '\u2605' : '\u2606';
+      pinBtn.title = pinned ? t('unpin') : t('pin');
+      pinBtn.setAttribute('aria-label', pinBtn.title);
+      pinBtn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        togglePinnedFormat(d.id);
+        buildPanelContent(shadow);
+      });
+      control.appendChild(pinBtn);
+      wrap.appendChild(control);
     });
 
     col.appendChild(wrap);
@@ -561,6 +856,13 @@ function buildPanelContent(shadow) {
   toolbar.appendChild(makeCol(t('colDecompress'), groups.dc, 'decompress'));
   toolbar.appendChild(makeCol(t('colDecode'), groups.dd, ''));
   panel.appendChild(toolbar);
+
+  if (hasBinaryOutput) {
+    var binaryHint = document.createElement('div');
+    binaryHint.className = 'empty-hint';
+    binaryHint.textContent = t('binaryHint');
+    panel.appendChild(binaryHint);
+  }
 
   // ---- 结果步骤 ----
   if (state.steps.length === 0) {
@@ -573,16 +875,23 @@ function buildPanelContent(shadow) {
   for (var i = 0; i < state.steps.length; i++) {
     var step = state.steps[i];
     var stepDiv = document.createElement('div');
-    stepDiv.className = 'step';
+    stepDiv.className = 'step' + (i === lastSuccessIndex ? ' active-source' : '');
 
     var stepLabel = document.createElement('div');
     stepLabel.className = 'step-label';
     var stepLabelText = document.createElement('span');
     stepLabelText.textContent = (step.label || step.decoderId).toUpperCase();
+    if (i === lastSuccessIndex) {
+      var sourceMarker = document.createElement('span');
+      sourceMarker.className = 'step-source';
+      sourceMarker.textContent = t('activeSource');
+      stepLabelText.appendChild(sourceMarker);
+    }
     var dismissBtn = document.createElement('button');
     dismissBtn.className = 'step-dismiss';
     dismissBtn.textContent = '\u00d7';
-    dismissBtn.title = '';
+    dismissBtn.title = t('close');
+    dismissBtn.setAttribute('aria-label', t('close'));
     (function (idx) {
       dismissBtn.addEventListener('click', function () {
         state.steps.splice(idx, state.steps.length - idx);
@@ -657,8 +966,9 @@ function buildPanelContent(shadow) {
 
 function openPanel(text, rect) {
   removePanel();
+  _panelPreviousFocus = document.activeElement;
 
-  _panelState = { input: text, steps: [], mode: 'decode', encodeFmt: 'base64', encodeInput: '' };
+  _panelState = { input: text, steps: [], mode: 'decode', encodeFmt: 'base64', encodeInput: text, loadingDecoderId: null, showHistory: false };
 
   var host = document.createElement('div');
   host.id = PANEL_ID;
@@ -669,16 +979,75 @@ function openPanel(text, rect) {
     'z-index: 2147483646',
     'pointer-events: all',
     'visibility: hidden',
-    'width: 400px',
+    'width: min(400px, calc(100vw - 16px))',
   ].join('; ');
 
   var shadow = host.attachShadow({ mode: 'open' });
   buildPanelContent(shadow);
   document.body.appendChild(host);
 
+  _panelKeydownHandler = function (event) {
+    if (event.key === 'Escape' || event.key === 'Esc') {
+      event.preventDefault();
+      removePanel();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    var focusables = Array.prototype.slice.call(shadow.querySelectorAll(
+      'button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+    ));
+    if (focusables.length === 0) return;
+    var active = shadow.activeElement || focusables[0];
+    var index = focusables.indexOf(active);
+    if (index < 0) index = event.shiftKey ? 0 : focusables.length - 1;
+    if (event.shiftKey && index === 0) {
+      event.preventDefault();
+      focusables[focusables.length - 1].focus();
+    } else if (!event.shiftKey && index === focusables.length - 1) {
+      event.preventDefault();
+      focusables[0].focus();
+    }
+  };
+  document.addEventListener('keydown', _panelKeydownHandler, true);
+
+  // Run a high-confidence recommendation immediately. The first render gives
+  // the user a stable panel while async compression decoders are in flight.
+  var groups = getDecoderGroups();
+  var recommendation = recommendDecoder(text, (groups.dc || []).concat(groups.dd || []));
+  if (recommendation) {
+    var panelState = _panelState;
+    var currentInput = String(text || '').trim();
+    panelState.loadingDecoderId = recommendation.id;
+    buildPanelContent(shadow);
+    var result;
+    try {
+      result = recommendation.decode(currentInput);
+    } catch (e) {
+      result = { text: '', error: e && e.message ? e.message : String(e) };
+    }
+    Promise.resolve(result).then(function (resolved) {
+      if (!_panelState || _panelState !== panelState) return;
+      var finalOutput = resolved || { text: '', error: 'Decoder returned no output' };
+      panelState.steps.push({ decoderId: recommendation.id, label: recommendation.label, output: finalOutput });
+      addHistory(recommendation, currentInput, finalOutput);
+    }).catch(function (e) {
+      if (!_panelState || _panelState !== panelState) return;
+      var failedOutput = { text: '', error: e && e.message ? e.message : String(e) };
+      panelState.steps.push({ decoderId: recommendation.id, label: recommendation.label, output: failedOutput });
+      addHistory(recommendation, currentInput, failedOutput);
+    }).then(function () {
+      if (!_panelState || _panelState !== panelState) return;
+      panelState.loadingDecoderId = null;
+      buildPanelContent(shadow);
+    });
+  }
+
+  var initialFocus = shadow.querySelector('.close-btn');
+  if (initialFocus && typeof initialFocus.focus === 'function') initialFocus.focus();
+
   requestAnimationFrame(function () {
     var panelHeight = host.offsetHeight || 0;
-    var panelWidth  = 400;
+    var panelWidth  = Math.min(400, Math.max(0, window.innerWidth - 16));
     var GAP = 8;
 
     var spaceBelow = window.innerHeight - rect.bottom - GAP;
@@ -709,5 +1078,5 @@ function openPanel(text, rect) {
 // ---------------------------------------------------------------------------
 
 if (typeof module !== 'undefined') {
-  module.exports = { openPanel, removePanel, buildPanelContent };
+  module.exports = { openPanel, removePanel, buildPanelContent, recommendDecoder, isBinary };
 }
